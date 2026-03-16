@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install Python deps
+        run: |
+          uv venv .venv
+          uv pip install --python .venv/bin/python -r requirements-dev.txt
+
+      - name: Build C++ core + pybind
+        run: scripts/build_core.sh
+
+      - name: C++ tests
+        run: scripts/test_core.sh
+
+      - name: Python tests
+        run: |
+          PYTHONPATH=core/aidecomp_py/python:services/aidecomp_api:services \
+            .venv/bin/pytest tests/python tests/api -q
+
+      - name: Web deps
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Web tests
+        working-directory: apps/web
+        run: npm run test
+
+      - name: Web build
+        working-directory: apps/web
+        run: npm run build

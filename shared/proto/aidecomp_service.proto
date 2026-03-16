@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package aidecomp.v1;
+
+message AnalyzeRequest {
+  string project_id = 1;
+  string session_id = 2;
+  string sample_id = 3;
+  string arch = 4;
+  repeated InstructionInput instructions = 5;
+}
+
+message InstructionInput {
+  uint64 address = 1;
+  string text = 2;
+}
+
+message AnalyzeResponse {
+  string session_id = 1;
+  string program_json = 2;
+}
+
+service AnalysisService {
+  rpc Analyze(AnalyzeRequest) returns (AnalyzeResponse);
+}

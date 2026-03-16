@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+apps/web/node_modules/
+apps/web/dist/
+apps/web/*.tsbuildinfo
+apps/web/vite.config.js
+apps/web/vite.config.d.ts
+apps/desktop-electron/node_modules/
+plugins/vscode/node_modules/
+plugins/vscode/out/
+data/
+.DS_Store

@@ -1,0 +1,13 @@
+{
+  "name": "aidecompvis-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "dev:backend": "AIDECOMP_RUNTIME_MODE=embedded PYTHONPATH=../../core/aidecomp_py/python:../../services/aidecomp_api ../../.venv/bin/uvicorn aidecomp_api.main:app --app-dir ../../services/aidecomp_api --host 127.0.0.1 --port 8000"
+  },
+  "devDependencies": {
+    "electron": "^31.7.5"
+  }
+}

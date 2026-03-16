@@ -1,0 +1,55 @@
+{
+  "name": "aidecompvis-vscode",
+  "displayName": "AI-DecompVis",
+  "description": "Thin VS Code adapter for local AI-DecompVis backend",
+  "version": "0.1.0",
+  "publisher": "aidecompvis",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onCommand:aidecompvis.connectSession",
+    "onView:aidecompvis.functions"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aidecompvis.connectSession",
+        "title": "AI-DecompVis: Connect Session"
+      },
+      {
+        "command": "aidecompvis.showFunctionSummary",
+        "title": "AI-DecompVis: Show Function Summary"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "aidecompvis.functions",
+          "name": "AI-DecompVis Functions"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AI-DecompVis",
+      "properties": {
+        "aidecompvis.backendUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:8000",
+          "description": "Local AI-DecompVis backend URL"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "watch": "tsc -w -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/vscode": "^1.95.0",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package aidecomp.runtime.v1;
+
+service AIDecompRuntime {
+  rpc AnalyzeBinary(AnalyzeBinaryRequest) returns (AnalyzeBinaryResponse);
+  rpc GetProgramSummary(GetProgramSummaryRequest) returns (GetProgramSummaryResponse);
+  rpc GetFunction(GetFunctionRequest) returns (GetFunctionResponse);
+  rpc GetCFG(GetCFGRequest) returns (GetCFGResponse);
+  rpc GetStackFrame(GetStackFrameRequest) returns (GetStackFrameResponse);
+  rpc GetExplanation(GetExplanationRequest) returns (GetExplanationResponse);
+  rpc ApplyAnnotation(ApplyAnnotationRequest) returns (MutationResponse);
+  rpc ApplyRename(ApplyRenameRequest) returns (MutationResponse);
+  rpc ApplyBookmark(ApplyBookmarkRequest) returns (MutationResponse);
+}
+
+message AnalyzeBinaryRequest {
+  string project_id = 1;
+  string session_id = 2;
+  string sample_id = 3;
+  string binary_path = 4;
+  string arch = 5;
+  string function_name = 6;
+  string instructions_json = 7;
+}
+
+message AnalyzeBinaryResponse {
+  string session_id = 1;
+  string project_id = 2;
+  string program_json = 3;
+}
+
+message GetProgramSummaryRequest { string session_id = 1; }
+message GetProgramSummaryResponse { string program_json = 1; }
+
+message GetFunctionRequest {
+  string session_id = 1;
+  string function_name = 2;
+}
+message GetFunctionResponse { string function_json = 1; }
+
+message GetCFGRequest {
+  string session_id = 1;
+  string function_name = 2;
+}
+message GetCFGResponse { string cfg_json = 1; }
+
+message GetStackFrameRequest {
+  string session_id = 1;
+  string function_name = 2;
+}
+message GetStackFrameResponse { string stack_frame_json = 1; }
+
+message GetExplanationRequest {
+  string session_id = 1;
+  string function_name = 2;
+  string level = 3;
+  string target_id = 4;
+  bool beginner_mode = 5;
+}
+message GetExplanationResponse { string explanation_json = 1; }
+
+message ApplyAnnotationRequest {
+  string project_id = 1;
+  string target_type = 2;
+  string target_id = 3;
+  string text = 4;
+}
+
+message ApplyRenameRequest {
+  string project_id = 1;
+  string target_type = 2;
+  string target_id = 3;
+  string new_name = 4;
+}
+
+message ApplyBookmarkRequest {
+  string project_id = 1;
+  string target_type = 2;
+  string target_id = 3;
+  string note = 4;
+}
+
+message MutationResponse {
+  bool ok = 1;
+  string project_state_json = 2;
+}

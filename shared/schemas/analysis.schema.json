@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aidecompvis.local/schemas/analysis.schema.json",
+  "title": "Program",
+  "type": "object",
+  "required": ["arch", "sample_id", "functions", "explanations"],
+  "properties": {
+    "arch": {"type": "string"},
+    "sample_id": {"type": "string"},
+    "image_base": {"type": "integer"},
+    "entry_point": {"type": "integer"},
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "va", "virtual_size", "raw_size", "kind"]
+      }
+    },
+    "imports": {"type": "array"},
+    "exports": {"type": "array"},
+    "strings": {"type": "array"},
+    "functions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "entry_block_id",
+          "blocks",
+          "edges",
+          "stack_frame",
+          "calling_convention_hint",
+          "pseudo_code",
+          "path_summaries",
+          "evidence_refs"
+        ]
+      }
+    },
+    "explanations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "level", "text", "evidence_refs"]
+      }
+    },
+    "progress": {"type": "array"}
+  }
+}

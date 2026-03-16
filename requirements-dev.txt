@@ -1,0 +1,9 @@
+cmake==3.31.6
+pybind11==2.13.6
+fastapi==0.115.11
+uvicorn==0.34.0
+pydantic==2.10.6
+httpx==0.28.1
+pytest==8.3.5
+grpcio==1.78.0
+grpcio-tools==1.78.0

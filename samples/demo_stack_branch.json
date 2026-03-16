@@ -1,0 +1,18 @@
+{
+  "sample_id": "demo_stack_branch",
+  "arch": "x64",
+  "function_name": "demo_main",
+  "instructions": [
+    {"address": 4096, "text": "push rbp"},
+    {"address": 4097, "text": "mov rbp, rsp"},
+    {"address": 4100, "text": "sub rsp, 0x20"},
+    {"address": 4104, "text": "cmp edi, 0"},
+    {"address": 4107, "text": "je 0x1015"},
+    {"address": 4109, "text": "call 0x2000"},
+    {"address": 4114, "text": "jmp 0x1018"},
+    {"address": 4117, "text": "mov eax, 0"},
+    {"address": 4120, "text": "add rsp, 0x20"},
+    {"address": 4124, "text": "pop rbp"},
+    {"address": 4125, "text": "ret"}
+  ]
+}
