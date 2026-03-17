@@ -10,6 +10,14 @@
   "categories": ["Other"],
   "activationEvents": [
     "onCommand:aidecompvis.connectSession",
+    "onCommand:aidecompvis.selectProjectSession",
+    "onCommand:aidecompvis.searchFunction",
+    "onCommand:aidecompvis.showExplanation",
+    "onCommand:aidecompvis.addAnnotation",
+    "onCommand:aidecompvis.addBookmark",
+    "onCommand:aidecompvis.applyNoReturnConstraint",
+    "onCommand:aidecompvis.applyValueRangeConstraint",
+    "onCommand:aidecompvis.applyTypeOverrideConstraint",
     "onView:aidecompvis.functions"
   ],
   "main": "./out/extension.js",
@@ -20,8 +28,40 @@
         "title": "AI-DecompVis: Connect Session"
       },
       {
+        "command": "aidecompvis.selectProjectSession",
+        "title": "AI-DecompVis: Select Project Session"
+      },
+      {
+        "command": "aidecompvis.searchFunction",
+        "title": "AI-DecompVis: Search Functions"
+      },
+      {
         "command": "aidecompvis.showFunctionSummary",
         "title": "AI-DecompVis: Show Function Summary"
+      },
+      {
+        "command": "aidecompvis.showExplanation",
+        "title": "AI-DecompVis: Show Explanation"
+      },
+      {
+        "command": "aidecompvis.addAnnotation",
+        "title": "AI-DecompVis: Add Annotation"
+      },
+      {
+        "command": "aidecompvis.addBookmark",
+        "title": "AI-DecompVis: Add Bookmark"
+      },
+      {
+        "command": "aidecompvis.applyNoReturnConstraint",
+        "title": "AI-DecompVis: Apply No-Return Constraint"
+      },
+      {
+        "command": "aidecompvis.applyValueRangeConstraint",
+        "title": "AI-DecompVis: Apply Value-Range Constraint"
+      },
+      {
+        "command": "aidecompvis.applyTypeOverrideConstraint",
+        "title": "AI-DecompVis: Apply Type-Override Constraint"
       }
     ],
     "views": {

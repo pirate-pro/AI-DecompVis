@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "aidecomp_core/models.hpp"
 
@@ -25,6 +27,15 @@ class X86InstructionDecoder final : public IInstructionDecoder {
 struct DecodedByteInstruction {
   RawInstruction raw;
   std::size_t size = 0;
+  std::string bytes_hex;
+  std::string backend;
+  std::vector<std::string> implicit_reads;
+  std::vector<std::string> implicit_writes;
+  bool has_immediate = false;
+  std::int64_t immediate = 0;
+  bool has_memory_operand = false;
+  std::string memory_operand;
+  std::string stack_effect_hint;
   bool valid = false;
   bool is_call = false;
   bool is_conditional_jump = false;
@@ -43,6 +54,15 @@ class IByteDecoder {
                                            std::size_t available) const = 0;
 };
 
+class IImageDecoder {
+ public:
+  virtual ~IImageDecoder() = default;
+  virtual bool SupportsArch(const std::string& arch) const = 0;
+  virtual std::string BackendName() const = 0;
+  virtual std::unordered_map<std::uint64_t, DecodedByteInstruction> DecodeFile(
+      const std::string& arch, const std::string& file_path) const = 0;
+};
+
 class X86ByteDecoder final : public IByteDecoder {
  public:
   bool SupportsArch(const std::string& arch) const override;
@@ -50,6 +70,25 @@ class X86ByteDecoder final : public IByteDecoder {
                                    std::uint64_t va,
                                    const std::uint8_t* data,
                                    std::size_t available) const override;
+};
+
+class ObjdumpImageDecoder final : public IImageDecoder {
+ public:
+  bool SupportsArch(const std::string& arch) const override;
+  std::string BackendName() const override;
+  std::unordered_map<std::uint64_t, DecodedByteInstruction> DecodeFile(
+      const std::string& arch, const std::string& file_path) const override;
+};
+
+class NativeByteImageDecoder final : public IImageDecoder {
+ public:
+  bool SupportsArch(const std::string& arch) const override;
+  std::string BackendName() const override;
+  std::unordered_map<std::uint64_t, DecodedByteInstruction> DecodeFile(
+      const std::string& arch, const std::string& file_path) const override;
+
+ private:
+  X86ByteDecoder byte_decoder_;
 };
 
 }  // namespace aidecomp

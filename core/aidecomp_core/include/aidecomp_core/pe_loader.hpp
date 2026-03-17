@@ -19,6 +19,17 @@ struct PESection {
   std::uint32_t characteristics = 0;
 };
 
+struct PEUnwindEntry {
+  std::uint32_t begin_rva = 0;
+  std::uint32_t end_rva = 0;
+  std::uint32_t unwind_info_rva = 0;
+  std::uint8_t version = 0;
+  std::uint8_t flags = 0;
+  std::uint8_t prolog_size = 0;
+  std::uint8_t unwind_code_count = 0;
+  bool has_exception_handler = false;
+};
+
 struct PEImage {
   std::string arch;
   std::uint64_t image_base = 0;
@@ -29,11 +40,13 @@ struct PEImage {
   std::vector<ImportSymbol> imports;
   std::vector<ExportSymbol> exports;
   std::vector<ExtractedString> strings;
+  std::vector<PEUnwindEntry> unwind_entries;
 
   std::optional<std::size_t> RvaToOffset(std::uint32_t rva) const;
   std::optional<std::uint32_t> VaToRva(std::uint64_t va) const;
   std::optional<std::size_t> VaToOffset(std::uint64_t va) const;
   const PESection* FindSectionByVa(std::uint64_t va) const;
+  const PEUnwindEntry* FindUnwindByFunctionRva(std::uint32_t begin_rva) const;
   std::vector<SectionInfo> BuildSectionSummary() const;
 };
 

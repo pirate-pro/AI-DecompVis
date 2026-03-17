@@ -1,71 +1,77 @@
-# AI-DecompVis Architecture (P1/P2 merge stage)
+# AI-DecompVis Architecture (P4/P5)
 
-## Core boundary (unchanged)
+## 1. Core boundary
 
-`core/aidecomp_core` remains the only analysis source of truth.
+`core/aidecomp_core` is still the single analysis source of truth.
 
-Owned by C++ core:
-- PE/COFF load (headers/sections/RVA/VA/entry/import/export)
-- byte decode backend (x86/x64)
-- function discovery (entry + call targets)
-- CFG/call graph/stack effect/stack balance
-- stack slot + calling convention hint
-- pseudo-code and evidence refs
-- string extraction and path summaries
+C++ core owns:
+- PE/COFF loading and image model
+- decoder abstraction and backend integration
+- function discovery / xref / call graph
+- CFG / stack effect / stack frame / stack balance
+- architecture-independent IR lifting
+- SSA + MemorySSA-like model (intraprocedural)
+- pseudo-code and path summary generation
+- evidence/confidence raw facts
+- user-guided constraints applied during analysis
 
-Not owned by C++ core:
-- project/workspace/session APIs
-- persistence
-- UI rendering
+C++ core does **not** own:
+- REST API
+- project/workspace persistence
+- UI state
 - AI provider orchestration
 
-## Bridge boundary
+## 2. Core pipeline
 
-`core/aidecomp_py` (pybind11):
-- exposes `analyze(...)` and `analyze_pe_file(...)`
-- exports Program/Function/... DTOs
-- no analysis duplication in Python
+Current pipeline:
+1. PE load (`headers/sections/imports/exports/strings`)
+2. decode (primary: `objdump-intel`, fallback: `x86-rule`)
+3. function discovery (recursive descent + safe fallback)
+4. per-function analysis:
+   - block split + CFG
+   - stack/frame facts
+   - instruction -> IR lifting
+   - SSA + MemorySSA-like
+   - function summary + evidence refs
+   - pseudo-code / path summaries
+5. program-level xrefs and explanation facts
 
-## Platform boundary
+## 3. Bridge boundary
+
+`core/aidecomp_py` is a thin pybind11 bridge:
+- exposes core entrypoints
+- mirrors Program/Function/IR/SSA/Evidence/Constraint DTOs
+- no duplicated decompiler passes
+
+## 4. Platform boundary
 
 `services/aidecomp_api` owns:
-- REST API
-- runtime mode selection (embedded vs daemon)
-- SQLite persistence
-- task progress (SSE)
-- explanation orchestration
+- workspace/project/session lifecycle
+- SQLite persistence (including constraints)
+- runtime provider switch (embedded/daemon)
+- task orchestration + SSE progress + cancellation endpoint
+- explanation provider orchestration
 
-## Runtime modes
+FastAPI does **not** implement decode/IR/SSA/type recovery passes.
 
-- embedded: FastAPI -> pybind11 -> C++ core
-- daemon: FastAPI -> gRPC -> aidecompd -> C++ core
+## 5. Runtime boundary
 
-Proto contract:
-- `shared/proto/aidecomp_runtime.proto`
-- includes AnalyzeBinary/GetProgramSummary/GetFunction/GetCFG/GetStackFrame/GetExplanation/Apply* methods
+Embedded:
+- `client -> FastAPI -> pybind11 -> C++ core`
 
-## Multi-entry
+Daemon:
+- `client -> FastAPI -> gRPC -> aidecompd -> pybind11 -> C++ core`
+- proto: `shared/proto/aidecomp_runtime.proto`
+- has `api_version` contract and cancel RPC
 
-All entry points reuse same backend contract:
-- Web app (`apps/web`)
-- Desktop Electron (`apps/desktop-electron`)
-- VS Code plugin (`plugins/vscode`)
-- future IDA/Ghidra adapters
+## 6. Thin clients
 
-## Data model source and mirrors
+- Web (`apps/web`)
+- Desktop (`apps/desktop-electron`)
+- VS Code (`plugins/vscode`)
 
-Source of truth: C++ structs (`models.hpp`) and pybind DTOs.
-Mirrors:
-- Python pydantic models (`services/aidecomp_api/aidecomp_api/models.py`)
-- TypeScript models (`apps/web/src/lib/types.ts`)
-
-## Persistence
-
-SQLite (`data/aidecompvis.db`):
-- projects
-- samples
-- sessions
-- annotations
-- bookmarks
-- renames
-- ui_state
+All clients remain thin:
+- consume backend DTO/contracts
+- render evidence/IR/SSA metadata
+- submit user constraints and trigger reanalysis
+- never duplicate core analysis logic

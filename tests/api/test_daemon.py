@@ -27,3 +27,17 @@ def test_daemon_servicer_analyze_and_summary(tmp_path: Path) -> None:
 
     summary = servicer.GetProgramSummary(pb2.GetProgramSummaryRequest(session_id="daemon-session"), DummyContext())
     assert "real_pe_minimal_x64" in summary.program_json
+
+
+def test_daemon_protocol_and_cancel(tmp_path: Path) -> None:
+    repo = SQLiteRepository(str(tmp_path / "daemon-cancel.db"))
+    servicer = RuntimeServicer(repo)
+
+    info = servicer.GetProtocolInfo(pb2.GetProtocolInfoRequest(), DummyContext())
+    assert info.api_version == "aidecomp.runtime.v1"
+
+    cancelled = servicer.CancelAnalysis(
+        pb2.CancelAnalysisRequest(api_version="aidecomp.runtime.v1", session_id="will-cancel"),
+        DummyContext(),
+    )
+    assert cancelled.accepted

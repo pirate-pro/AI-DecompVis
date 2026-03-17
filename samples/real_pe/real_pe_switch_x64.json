@@ -1,0 +1,7 @@
+{
+  "sample_id": "real_pe_switch_x64",
+  "arch": "x64",
+  "kind": "real_pe",
+  "file": "samples/real_pe/switch_x64.exe",
+  "description": "Public distributable PE32+ sample with an indirect jump-table-like dispatch"
+}

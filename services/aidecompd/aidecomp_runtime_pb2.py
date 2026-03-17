@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16\x61idecomp_runtime.proto\x12\x13\x61idecomp.runtime.v1\"\xa6\x01\n\x14\x41nalyzeBinaryRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x12\n\nsession_id\x18\x02 \x01(\t\x12\x11\n\tsample_id\x18\x03 \x01(\t\x12\x13\n\x0b\x62inary_path\x18\x04 \x01(\t\x12\x0c\n\x04\x61rch\x18\x05 \x01(\t\x12\x15\n\rfunction_name\x18\x06 \x01(\t\x12\x19\n\x11instructions_json\x18\x07 \x01(\t\"U\n\x15\x41nalyzeBinaryResponse\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x14\n\x0cprogram_json\x18\x03 \x01(\t\".\n\x18GetProgramSummaryRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\"1\n\x19GetProgramSummaryResponse\x12\x14\n\x0cprogram_json\x18\x01 \x01(\t\"?\n\x12GetFunctionRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\",\n\x13GetFunctionResponse\x12\x15\n\rfunction_json\x18\x01 \x01(\t\":\n\rGetCFGRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\"\"\n\x0eGetCFGResponse\x12\x10\n\x08\x63\x66g_json\x18\x01 \x01(\t\"A\n\x14GetStackFrameRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\"1\n\x15GetStackFrameResponse\x12\x18\n\x10stack_frame_json\x18\x01 \x01(\t\"{\n\x15GetExplanationRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\x12\r\n\x05level\x18\x03 \x01(\t\x12\x11\n\ttarget_id\x18\x04 \x01(\t\x12\x15\n\rbeginner_mode\x18\x05 \x01(\x08\"2\n\x16GetExplanationResponse\x12\x18\n\x10\x65xplanation_json\x18\x01 \x01(\t\"b\n\x16\x41pplyAnnotationRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x13\n\x0btarget_type\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\x12\x0c\n\x04text\x18\x04 \x01(\t\"b\n\x12\x41pplyRenameRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x13\n\x0btarget_type\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\x12\x10\n\x08new_name\x18\x04 \x01(\t\"`\n\x14\x41pplyBookmarkRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x13\n\x0btarget_type\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\x12\x0c\n\x04note\x18\x04 \x01(\t\":\n\x10MutationResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x1a\n\x12project_state_json\x18\x02 \x01(\t2\x9e\x07\n\x0f\x41IDecompRuntime\x12\x66\n\rAnalyzeBinary\x12).aidecomp.runtime.v1.AnalyzeBinaryRequest\x1a*.aidecomp.runtime.v1.AnalyzeBinaryResponse\x12r\n\x11GetProgramSummary\x12-.aidecomp.runtime.v1.GetProgramSummaryRequest\x1a..aidecomp.runtime.v1.GetProgramSummaryResponse\x12`\n\x0bGetFunction\x12\'.aidecomp.runtime.v1.GetFunctionRequest\x1a(.aidecomp.runtime.v1.GetFunctionResponse\x12Q\n\x06GetCFG\x12\".aidecomp.runtime.v1.GetCFGRequest\x1a#.aidecomp.runtime.v1.GetCFGResponse\x12\x66\n\rGetStackFrame\x12).aidecomp.runtime.v1.GetStackFrameRequest\x1a*.aidecomp.runtime.v1.GetStackFrameResponse\x12i\n\x0eGetExplanation\x12*.aidecomp.runtime.v1.GetExplanationRequest\x1a+.aidecomp.runtime.v1.GetExplanationResponse\x12\x65\n\x0f\x41pplyAnnotation\x12+.aidecomp.runtime.v1.ApplyAnnotationRequest\x1a%.aidecomp.runtime.v1.MutationResponse\x12]\n\x0b\x41pplyRename\x12\'.aidecomp.runtime.v1.ApplyRenameRequest\x1a%.aidecomp.runtime.v1.MutationResponse\x12\x61\n\rApplyBookmark\x12).aidecomp.runtime.v1.ApplyBookmarkRequest\x1a%.aidecomp.runtime.v1.MutationResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16\x61idecomp_runtime.proto\x12\x13\x61idecomp.runtime.v1\"\x81\x02\n\x14\x41nalyzeBinaryRequest\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\t\x12\x11\n\tclient_id\x18\x02 \x01(\t\x12\x17\n\x0frequest_unix_ms\x18\x03 \x01(\x03\x12\x12\n\nproject_id\x18\x04 \x01(\t\x12\x12\n\nsession_id\x18\x05 \x01(\t\x12\x11\n\tsample_id\x18\x06 \x01(\t\x12\x13\n\x0b\x62inary_path\x18\x07 \x01(\t\x12\x0c\n\x04\x61rch\x18\x08 \x01(\t\x12\x15\n\rfunction_name\x18\t \x01(\t\x12\x19\n\x11instructions_json\x18\n \x01(\t\x12\x18\n\x10\x63onstraints_json\x18\x0b \x01(\t\"j\n\x15\x41nalyzeBinaryResponse\x12\x13\n\x0b\x61pi_version\x18\x04 \x01(\t\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x14\n\x0cprogram_json\x18\x03 \x01(\t\"@\n\x15\x43\x61ncelAnalysisRequest\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\t\x12\x12\n\nsession_id\x18\x02 \x01(\t\":\n\x16\x43\x61ncelAnalysisResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\"\x18\n\x16GetProtocolInfoRequest\"C\n\x17GetProtocolInfoResponse\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x61\x65mon_name\x18\x02 \x01(\t\".\n\x18GetProgramSummaryRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\"1\n\x19GetProgramSummaryResponse\x12\x14\n\x0cprogram_json\x18\x01 \x01(\t\"?\n\x12GetFunctionRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\",\n\x13GetFunctionResponse\x12\x15\n\rfunction_json\x18\x01 \x01(\t\":\n\rGetCFGRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\"\"\n\x0eGetCFGResponse\x12\x10\n\x08\x63\x66g_json\x18\x01 \x01(\t\"A\n\x14GetStackFrameRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\"1\n\x15GetStackFrameResponse\x12\x18\n\x10stack_frame_json\x18\x01 \x01(\t\"{\n\x15GetExplanationRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\x12\r\n\x05level\x18\x03 \x01(\t\x12\x11\n\ttarget_id\x18\x04 \x01(\t\x12\x15\n\rbeginner_mode\x18\x05 \x01(\x08\"2\n\x16GetExplanationResponse\x12\x18\n\x10\x65xplanation_json\x18\x01 \x01(\t\"b\n\x16\x41pplyAnnotationRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x13\n\x0btarget_type\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\x12\x0c\n\x04text\x18\x04 \x01(\t\"b\n\x12\x41pplyRenameRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x13\n\x0btarget_type\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\x12\x10\n\x08new_name\x18\x04 \x01(\t\"`\n\x14\x41pplyBookmarkRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x13\n\x0btarget_type\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\x12\x0c\n\x04note\x18\x04 \x01(\t\":\n\x10MutationResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x1a\n\x12project_state_json\x18\x02 \x01(\t2\xf7\x08\n\x0f\x41IDecompRuntime\x12\x66\n\rAnalyzeBinary\x12).aidecomp.runtime.v1.AnalyzeBinaryRequest\x1a*.aidecomp.runtime.v1.AnalyzeBinaryResponse\x12i\n\x0e\x43\x61ncelAnalysis\x12*.aidecomp.runtime.v1.CancelAnalysisRequest\x1a+.aidecomp.runtime.v1.CancelAnalysisResponse\x12l\n\x0fGetProtocolInfo\x12+.aidecomp.runtime.v1.GetProtocolInfoRequest\x1a,.aidecomp.runtime.v1.GetProtocolInfoResponse\x12r\n\x11GetProgramSummary\x12-.aidecomp.runtime.v1.GetProgramSummaryRequest\x1a..aidecomp.runtime.v1.GetProgramSummaryResponse\x12`\n\x0bGetFunction\x12\'.aidecomp.runtime.v1.GetFunctionRequest\x1a(.aidecomp.runtime.v1.GetFunctionResponse\x12Q\n\x06GetCFG\x12\".aidecomp.runtime.v1.GetCFGRequest\x1a#.aidecomp.runtime.v1.GetCFGResponse\x12\x66\n\rGetStackFrame\x12).aidecomp.runtime.v1.GetStackFrameRequest\x1a*.aidecomp.runtime.v1.GetStackFrameResponse\x12i\n\x0eGetExplanation\x12*.aidecomp.runtime.v1.GetExplanationRequest\x1a+.aidecomp.runtime.v1.GetExplanationResponse\x12\x65\n\x0f\x41pplyAnnotation\x12+.aidecomp.runtime.v1.ApplyAnnotationRequest\x1a%.aidecomp.runtime.v1.MutationResponse\x12]\n\x0b\x41pplyRename\x12\'.aidecomp.runtime.v1.ApplyRenameRequest\x1a%.aidecomp.runtime.v1.MutationResponse\x12\x61\n\rApplyBookmark\x12).aidecomp.runtime.v1.ApplyBookmarkRequest\x1a%.aidecomp.runtime.v1.MutationResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,37 +32,45 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'aidecomp_runtime_pb2', _glo
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_ANALYZEBINARYREQUEST']._serialized_start=48
-  _globals['_ANALYZEBINARYREQUEST']._serialized_end=214
-  _globals['_ANALYZEBINARYRESPONSE']._serialized_start=216
-  _globals['_ANALYZEBINARYRESPONSE']._serialized_end=301
-  _globals['_GETPROGRAMSUMMARYREQUEST']._serialized_start=303
-  _globals['_GETPROGRAMSUMMARYREQUEST']._serialized_end=349
-  _globals['_GETPROGRAMSUMMARYRESPONSE']._serialized_start=351
-  _globals['_GETPROGRAMSUMMARYRESPONSE']._serialized_end=400
-  _globals['_GETFUNCTIONREQUEST']._serialized_start=402
-  _globals['_GETFUNCTIONREQUEST']._serialized_end=465
-  _globals['_GETFUNCTIONRESPONSE']._serialized_start=467
-  _globals['_GETFUNCTIONRESPONSE']._serialized_end=511
-  _globals['_GETCFGREQUEST']._serialized_start=513
-  _globals['_GETCFGREQUEST']._serialized_end=571
-  _globals['_GETCFGRESPONSE']._serialized_start=573
-  _globals['_GETCFGRESPONSE']._serialized_end=607
-  _globals['_GETSTACKFRAMEREQUEST']._serialized_start=609
-  _globals['_GETSTACKFRAMEREQUEST']._serialized_end=674
-  _globals['_GETSTACKFRAMERESPONSE']._serialized_start=676
-  _globals['_GETSTACKFRAMERESPONSE']._serialized_end=725
-  _globals['_GETEXPLANATIONREQUEST']._serialized_start=727
-  _globals['_GETEXPLANATIONREQUEST']._serialized_end=850
-  _globals['_GETEXPLANATIONRESPONSE']._serialized_start=852
-  _globals['_GETEXPLANATIONRESPONSE']._serialized_end=902
-  _globals['_APPLYANNOTATIONREQUEST']._serialized_start=904
-  _globals['_APPLYANNOTATIONREQUEST']._serialized_end=1002
-  _globals['_APPLYRENAMEREQUEST']._serialized_start=1004
-  _globals['_APPLYRENAMEREQUEST']._serialized_end=1102
-  _globals['_APPLYBOOKMARKREQUEST']._serialized_start=1104
-  _globals['_APPLYBOOKMARKREQUEST']._serialized_end=1200
-  _globals['_MUTATIONRESPONSE']._serialized_start=1202
-  _globals['_MUTATIONRESPONSE']._serialized_end=1260
-  _globals['_AIDECOMPRUNTIME']._serialized_start=1263
-  _globals['_AIDECOMPRUNTIME']._serialized_end=2189
+  _globals['_ANALYZEBINARYREQUEST']._serialized_end=305
+  _globals['_ANALYZEBINARYRESPONSE']._serialized_start=307
+  _globals['_ANALYZEBINARYRESPONSE']._serialized_end=413
+  _globals['_CANCELANALYSISREQUEST']._serialized_start=415
+  _globals['_CANCELANALYSISREQUEST']._serialized_end=479
+  _globals['_CANCELANALYSISRESPONSE']._serialized_start=481
+  _globals['_CANCELANALYSISRESPONSE']._serialized_end=539
+  _globals['_GETPROTOCOLINFOREQUEST']._serialized_start=541
+  _globals['_GETPROTOCOLINFOREQUEST']._serialized_end=565
+  _globals['_GETPROTOCOLINFORESPONSE']._serialized_start=567
+  _globals['_GETPROTOCOLINFORESPONSE']._serialized_end=634
+  _globals['_GETPROGRAMSUMMARYREQUEST']._serialized_start=636
+  _globals['_GETPROGRAMSUMMARYREQUEST']._serialized_end=682
+  _globals['_GETPROGRAMSUMMARYRESPONSE']._serialized_start=684
+  _globals['_GETPROGRAMSUMMARYRESPONSE']._serialized_end=733
+  _globals['_GETFUNCTIONREQUEST']._serialized_start=735
+  _globals['_GETFUNCTIONREQUEST']._serialized_end=798
+  _globals['_GETFUNCTIONRESPONSE']._serialized_start=800
+  _globals['_GETFUNCTIONRESPONSE']._serialized_end=844
+  _globals['_GETCFGREQUEST']._serialized_start=846
+  _globals['_GETCFGREQUEST']._serialized_end=904
+  _globals['_GETCFGRESPONSE']._serialized_start=906
+  _globals['_GETCFGRESPONSE']._serialized_end=940
+  _globals['_GETSTACKFRAMEREQUEST']._serialized_start=942
+  _globals['_GETSTACKFRAMEREQUEST']._serialized_end=1007
+  _globals['_GETSTACKFRAMERESPONSE']._serialized_start=1009
+  _globals['_GETSTACKFRAMERESPONSE']._serialized_end=1058
+  _globals['_GETEXPLANATIONREQUEST']._serialized_start=1060
+  _globals['_GETEXPLANATIONREQUEST']._serialized_end=1183
+  _globals['_GETEXPLANATIONRESPONSE']._serialized_start=1185
+  _globals['_GETEXPLANATIONRESPONSE']._serialized_end=1235
+  _globals['_APPLYANNOTATIONREQUEST']._serialized_start=1237
+  _globals['_APPLYANNOTATIONREQUEST']._serialized_end=1335
+  _globals['_APPLYRENAMEREQUEST']._serialized_start=1337
+  _globals['_APPLYRENAMEREQUEST']._serialized_end=1435
+  _globals['_APPLYBOOKMARKREQUEST']._serialized_start=1437
+  _globals['_APPLYBOOKMARKREQUEST']._serialized_end=1533
+  _globals['_MUTATIONRESPONSE']._serialized_start=1535
+  _globals['_MUTATIONRESPONSE']._serialized_end=1593
+  _globals['_AIDECOMPRUNTIME']._serialized_start=1596
+  _globals['_AIDECOMPRUNTIME']._serialized_end=2739
 # @@protoc_insertion_point(module_scope)

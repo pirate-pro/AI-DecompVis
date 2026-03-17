@@ -1,32 +1,37 @@
-# Plugin Strategy
+# Plugin Strategy (P4/P5)
 
 ## Goal
 
-All plugins are thin adapters over a shared local backend contract.
+Keep plugins as thin host adapters over shared backend contracts.
 
-## Shared backend contract
+## Shared contract surface
 
-- Analyze and load sessions
-- Retrieve program/function/CFG/stack/explanation DTO
-- Apply annotation/rename/bookmark mutations
+Plugins consume:
+- workspace/project/session discovery
+- program/function/IR-summary/xref/explanation DTOs
+- mutation APIs (`annotation` / `bookmark` / `rename`)
+- user-guided constraints + reanalysis trigger
 
-Contract surfaces:
-- REST (current)
-- gRPC (`shared/proto/aidecomp_runtime.proto`) for future stable adapter line
+Transports:
+- REST (current primary path)
+- gRPC contract reserved for future direct-host adapters
 
-## Why thin clients
+## Why thin
 
-- Prevent analysis logic fragmentation across hosts
-- Keep C++ core as single source of truth
-- Simplify consistency of explanations and evidence refs
+- C++ core remains the only analysis source of truth
+- avoids duplicated decoder/IR/SSA logic in host plugins
+- keeps confidence/evidence semantics consistent across Web/Desktop/Plugin
 
-## Current status
+## VS Code status
 
-- VS Code: MVP implemented (`plugins/vscode`)
-- IDA/Ghidra: architecture and expected host contract documented
+Current VS Code plugin supports:
+- select `project -> session`
+- function tree + search
+- function summary and explanation webviews
+- annotation/bookmark write-back
+- apply `no_return` constraint and trigger reanalysis refresh
 
-## Next for plugins
+## IDA / Ghidra status
 
-1. Add auth-free local session discovery command.
-2. Add jump-to-basic-block interaction from host selection.
-3. Add lightweight caching and reconnection handling for daemon mode.
+- current stage keeps README + contract expectations only
+- planned adapters should call backend contracts, not embed analysis logic

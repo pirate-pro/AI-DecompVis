@@ -5,12 +5,14 @@ import os
 import threading
 import time
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
+from .discovery import discover_binaries
 from .explanations.service import ExplanationService
 from .models import (
     AnalysisTaskCreateRequest,
@@ -18,7 +20,10 @@ from .models import (
     AnalyzeRequest,
     AnalyzeResponse,
     Annotation,
+    BinaryCandidate,
+    BinaryDiscoveryResponse,
     Bookmark,
+    ConstraintCreateRequest,
     ExplanationRequest,
     ExplanationResponse,
     ProjectCreateRequest,
@@ -27,6 +32,7 @@ from .models import (
     Rename,
     RuntimeInfo,
     SampleRecord,
+    SessionRecord,
     UIState,
 )
 from .runtime.providers import DaemonAnalysisProvider, EmbeddedAnalysisProvider
@@ -48,18 +54,25 @@ repo = SQLiteRepository(DB_PATH)
 RUNTIME_MODE = os.getenv("AIDECOMP_RUNTIME_MODE", "embedded").strip().lower()
 DAEMON_TARGET = os.getenv("AIDECOMPD_TARGET", "127.0.0.1:50051")
 provider = DaemonAnalysisProvider(DAEMON_TARGET) if RUNTIME_MODE == "daemon" else EmbeddedAnalysisProvider()
+print(
+    f"[aidecomp_api] runtime_mode={provider.mode()}"
+    + (f" daemon_target={DAEMON_TARGET}" if provider.mode() == "daemon" else "")
+)
 
 explanation_service = ExplanationService()
 
 _task_lock = threading.Lock()
 _task_status: dict[str, AnalysisTaskStatus] = {}
 _task_updates: dict[str, list[AnalysisTaskStatus]] = {}
+_task_cancelled: dict[str, bool] = {}
 
 
 def _track_progress(task_id: str, percent: int, stage: str, detail: str) -> None:
     with _task_lock:
         current = _task_status.get(task_id)
         if current is None:
+            return
+        if _task_cancelled.get(task_id, False):
             return
         status = AnalysisTaskStatus(
             task_id=task_id,
@@ -90,6 +103,7 @@ def _resolve_request(request: AnalyzeRequest) -> AnalyzeRequest:
                 arch=sample.get("arch", request.arch),
                 function_name=sample.get("function_name", request.function_name),
                 binary_path=file_path,
+                constraints=request.constraints,
             )
 
         return AnalyzeRequest(
@@ -99,6 +113,7 @@ def _resolve_request(request: AnalyzeRequest) -> AnalyzeRequest:
             arch=sample.get("arch", request.arch),
             function_name=sample.get("function_name", request.function_name),
             instructions=sample.get("instructions", []),
+            constraints=request.constraints,
         )
 
     if request.binary_path:
@@ -113,15 +128,21 @@ def _resolve_request(request: AnalyzeRequest) -> AnalyzeRequest:
     raise HTTPException(status_code=400, detail="Provide one of: sample_id, binary_path, or instructions")
 
 
-def _analyze_sync(request: AnalyzeRequest, task_id: str | None = None) -> AnalyzeResponse:
+def _analyze_sync(
+    request: AnalyzeRequest,
+    task_id: str | None = None,
+    cancelled: Callable[[], bool] | None = None,
+) -> AnalyzeResponse:
     resolved = _resolve_request(request)
+    if not resolved.constraints:
+        resolved = resolved.model_copy(update={"constraints": repo.list_constraints(resolved.project_id)})
 
     def progress(percent: int, stage: str, detail: str) -> None:
         if task_id:
             _track_progress(task_id, percent, stage, detail)
 
     try:
-        program = provider.analyze(resolved, progress if task_id else None)
+        program = provider.analyze(resolved, progress if task_id else None, cancelled)
     except Exception as exc:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -153,6 +174,48 @@ def runtime_info() -> RuntimeInfo:
     return RuntimeInfo(mode=provider.mode(), daemon_target=target)
 
 
+@app.get("/discovery/binaries", response_model=BinaryDiscoveryResponse)
+def discover_binary_files(
+    q: str = "",
+    limit: int = Query(default=40, ge=1, le=200),
+    max_depth: int = Query(default=5, ge=1, le=12),
+    roots: str = "",
+) -> BinaryDiscoveryResponse:
+    root_list = [item.strip() for item in roots.split(",") if item.strip()]
+    discovered, scanned_roots, truncated = discover_binaries(query=q, roots=root_list, limit=limit, max_depth=max_depth)
+
+    candidates: list[BinaryCandidate] = []
+    for item in discovered:
+        if item.priority >= 75:
+            label = "high"
+        elif item.priority >= 45:
+            label = "medium"
+        else:
+            label = "low"
+
+        candidates.append(
+            BinaryCandidate(
+                path=item.path,
+                name=item.name,
+                source_root=item.source_root,
+                size_bytes=item.size_bytes,
+                modified_at=item.modified_at,
+                priority=item.priority,
+                priority_label=label,
+                reasons=item.reasons,
+            )
+        )
+
+    return BinaryDiscoveryResponse(
+        query=q,
+        roots=root_list,
+        scanned_roots=scanned_roots,
+        total=len(candidates),
+        truncated=truncated,
+        candidates=candidates,
+    )
+
+
 @app.get("/samples")
 def samples() -> list[dict[str, str | int]]:
     return list_samples()
@@ -169,9 +232,15 @@ def create_analysis_task(payload: AnalysisTaskCreateRequest) -> dict[str, str]:
     with _task_lock:
         _task_status[task_id] = AnalysisTaskStatus(task_id=task_id, status="queued", percent=0, stage="queued", detail="Waiting")
         _task_updates[task_id] = [_task_status[task_id]]
+        _task_cancelled[task_id] = False
 
     def worker() -> None:
         request = payload.analyze
+
+        def cancelled() -> bool:
+            with _task_lock:
+                return _task_cancelled.get(task_id, False)
+
         with _task_lock:
             current = _task_status[task_id]
             _task_status[task_id] = AnalysisTaskStatus(
@@ -185,27 +254,49 @@ def create_analysis_task(payload: AnalysisTaskCreateRequest) -> dict[str, str]:
             _task_updates[task_id].append(_task_status[task_id])
 
         try:
-            _analyze_sync(request, task_id=task_id)
+            if cancelled():
+                raise RuntimeError("analysis cancelled before execution")
+            _analyze_sync(request, task_id=task_id, cancelled=cancelled)
             with _task_lock:
-                _task_status[task_id] = AnalysisTaskStatus(
-                    task_id=task_id,
-                    status="done",
-                    percent=100,
-                    stage="done",
-                    detail="Task finished",
-                    session_id=request.session_id,
-                )
+                if _task_cancelled.get(task_id, False):
+                    _task_status[task_id] = AnalysisTaskStatus(
+                        task_id=task_id,
+                        status="cancelled",
+                        percent=100,
+                        stage="cancelled",
+                        detail="Task cancelled by user",
+                        session_id=request.session_id,
+                    )
+                else:
+                    _task_status[task_id] = AnalysisTaskStatus(
+                        task_id=task_id,
+                        status="done",
+                        percent=100,
+                        stage="done",
+                        detail="Task finished",
+                        session_id=request.session_id,
+                    )
                 _task_updates[task_id].append(_task_status[task_id])
         except Exception as exc:  # pragma: no cover
             with _task_lock:
-                _task_status[task_id] = AnalysisTaskStatus(
-                    task_id=task_id,
-                    status="failed",
-                    percent=100,
-                    stage="failed",
-                    detail=str(exc),
-                    session_id=request.session_id,
-                )
+                if _task_cancelled.get(task_id, False) or "cancelled" in str(exc).lower():
+                    _task_status[task_id] = AnalysisTaskStatus(
+                        task_id=task_id,
+                        status="cancelled",
+                        percent=100,
+                        stage="cancelled",
+                        detail="Task cancelled by user",
+                        session_id=request.session_id,
+                    )
+                else:
+                    _task_status[task_id] = AnalysisTaskStatus(
+                        task_id=task_id,
+                        status="failed",
+                        percent=100,
+                        stage="failed",
+                        detail=str(exc),
+                        session_id=request.session_id,
+                    )
                 _task_updates[task_id].append(_task_status[task_id])
 
     threading.Thread(target=worker, daemon=True).start()
@@ -228,7 +319,7 @@ def stream_task_events(task_id: str) -> StreamingResponse:
         while True:
             with _task_lock:
                 updates = list(_task_updates.get(task_id, []))
-                done = bool(updates and updates[-1].status in {"done", "failed"})
+                done = bool(updates and updates[-1].status in {"done", "failed", "cancelled"})
             while cursor < len(updates):
                 payload = updates[cursor].model_dump_json()
                 cursor += 1
@@ -241,6 +332,28 @@ def stream_task_events(task_id: str) -> StreamingResponse:
         raise HTTPException(status_code=404, detail=f"task not found: {task_id}")
 
     return StreamingResponse(event_iter(), media_type="text/event-stream")
+
+
+@app.post("/analysis/tasks/{task_id}/cancel", response_model=AnalysisTaskStatus)
+def cancel_task(task_id: str) -> AnalysisTaskStatus:
+    with _task_lock:
+        status = _task_status.get(task_id)
+        if status is None:
+            raise HTTPException(status_code=404, detail=f"task not found: {task_id}")
+        if status.status in {"done", "failed", "cancelled"}:
+            return status
+        _task_cancelled[task_id] = True
+        cancelled_status = AnalysisTaskStatus(
+            task_id=task_id,
+            status="cancelled",
+            percent=status.percent,
+            stage="cancelled",
+            detail="Cancellation requested",
+            session_id=status.session_id,
+        )
+        _task_status[task_id] = cancelled_status
+        _task_updates.setdefault(task_id, []).append(cancelled_status)
+        return cancelled_status
 
 
 @app.get("/analysis/{session_id}")
@@ -275,6 +388,22 @@ def delete_project(project_id: str) -> dict[str, str]:
 @app.get("/projects/{project_id}/samples", response_model=list[SampleRecord])
 def list_project_samples(project_id: str) -> list[SampleRecord]:
     return repo.list_samples(project_id)
+
+
+@app.get("/projects/{project_id}/sessions", response_model=list[SessionRecord])
+def list_project_sessions(project_id: str) -> list[SessionRecord]:
+    return repo.list_sessions(project_id)
+
+
+@app.get("/projects/{project_id}/constraints")
+def list_project_constraints(project_id: str):
+    return {"project_id": project_id, "constraints": repo.list_constraints(project_id)}
+
+
+@app.post("/projects/{project_id}/constraints")
+def add_project_constraint(project_id: str, payload: ConstraintCreateRequest):
+    repo.add_constraint(project_id, payload.constraint)
+    return {"project_id": project_id, "constraints": repo.list_constraints(project_id)}
 
 
 @app.post("/projects/{project_id}/annotations", response_model=ProjectState)

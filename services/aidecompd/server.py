@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from concurrent import futures
 
 import grpc
 
 from aidecomp_api.explanations.service import ExplanationService
-from aidecomp_api.models import AnalyzeRequest, Annotation, Bookmark, ExplanationRequest, Rename
+from aidecomp_api.models import AnalysisConstraint, AnalyzeRequest, Annotation, Bookmark, ExplanationRequest, Rename
 from aidecomp_api.runtime.providers.embedded import EmbeddedAnalysisProvider
 from aidecomp_api.storage import SQLiteRepository
 
@@ -20,11 +21,37 @@ class RuntimeServicer(pb2_grpc.AIDecompRuntimeServicer):
         self.repo = repo
         self.provider = EmbeddedAnalysisProvider()
         self.explain_service = ExplanationService()
+        self._cancel_lock = threading.Lock()
+        self._cancelled_sessions: set[str] = set()
+        self._api_version = "aidecomp.runtime.v1"
+
+    def _is_cancelled(self, session_id: str) -> bool:
+        with self._cancel_lock:
+            return session_id in self._cancelled_sessions
+
+    def _mark_cancelled(self, session_id: str) -> None:
+        with self._cancel_lock:
+            self._cancelled_sessions.add(session_id)
+
+    def _clear_cancelled(self, session_id: str) -> None:
+        with self._cancel_lock:
+            self._cancelled_sessions.discard(session_id)
 
     def AnalyzeBinary(self, request: pb2.AnalyzeBinaryRequest, context: grpc.ServicerContext) -> pb2.AnalyzeBinaryResponse:
+        if request.api_version and request.api_version != self._api_version:
+            context.abort(
+                grpc.StatusCode.FAILED_PRECONDITION,
+                f"incompatible api_version: {request.api_version}, expected {self._api_version}",
+            )
+        if self._is_cancelled(request.session_id):
+            context.abort(grpc.StatusCode.CANCELLED, f"session cancelled: {request.session_id}")
+
         instructions = None
         if request.instructions_json:
             instructions = [item for item in json.loads(request.instructions_json)]
+        constraints: list[AnalysisConstraint] = []
+        if getattr(request, "constraints_json", ""):
+            constraints = [AnalysisConstraint.model_validate(item) for item in json.loads(request.constraints_json)]
 
         analyze = AnalyzeRequest(
             project_id=request.project_id or "default",
@@ -34,16 +61,30 @@ class RuntimeServicer(pb2_grpc.AIDecompRuntimeServicer):
             function_name=request.function_name or "entry",
             instructions=instructions,
             binary_path=request.binary_path or None,
+            constraints=constraints,
         )
 
         program = self.provider.analyze(analyze)
+        if self._is_cancelled(analyze.session_id):
+            context.abort(grpc.StatusCode.CANCELLED, f"session cancelled: {analyze.session_id}")
         self.repo.save_session(analyze.session_id, analyze.project_id, analyze.sample_id or "custom", program)
+        self._clear_cancelled(analyze.session_id)
 
         return pb2.AnalyzeBinaryResponse(
+            api_version=self._api_version,
             session_id=analyze.session_id,
             project_id=analyze.project_id,
             program_json=program.model_dump_json(),
         )
+
+    def CancelAnalysis(self, request: pb2.CancelAnalysisRequest, context: grpc.ServicerContext) -> pb2.CancelAnalysisResponse:
+        if not request.session_id:
+            return pb2.CancelAnalysisResponse(accepted=False, detail="missing session_id")
+        self._mark_cancelled(request.session_id)
+        return pb2.CancelAnalysisResponse(accepted=True, detail=f"cancelled session {request.session_id}")
+
+    def GetProtocolInfo(self, request: pb2.GetProtocolInfoRequest, context: grpc.ServicerContext) -> pb2.GetProtocolInfoResponse:
+        return pb2.GetProtocolInfoResponse(api_version=self._api_version, daemon_name="aidecompd")
 
     def GetProgramSummary(self, request: pb2.GetProgramSummaryRequest, context: grpc.ServicerContext) -> pb2.GetProgramSummaryResponse:
         session = self.repo.get_session(request.session_id)

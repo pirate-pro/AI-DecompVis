@@ -15,7 +15,7 @@ export function CodePanel({ func, selectedBlockId, selectedInstructionAddress, o
   return (
     <div className="code-grid">
       <section className="panel">
-        <h3>Assembly</h3>
+        <h3>汇编视图</h3>
         <div className="scroll-zone">
           {func.blocks.map((block) => (
             <div key={block.id} className={block.id === selectedBlockId ? "asm-block selected" : "asm-block"}>
@@ -29,6 +29,7 @@ export function CodePanel({ func, selectedBlockId, selectedInstructionAddress, o
                     onClick={() => onSelectInstruction(inst.address)}
                   >
                     <span>{formatAddress(inst.address)}</span>
+                    <span>{inst.bytes_hex || "--"}</span>
                     <span>{inst.text}</span>
                   </button>
                 );
@@ -39,7 +40,7 @@ export function CodePanel({ func, selectedBlockId, selectedInstructionAddress, o
       </section>
 
       <section className="panel">
-        <h3>Pseudo Code</h3>
+        <h3>伪代码视图</h3>
         <div className="scroll-zone pseudo-zone">
           {func.pseudo_code.map((line, index) => {
             const isBlockLabel = line.trim().endsWith(":");

@@ -202,6 +202,15 @@ const PESection* PEImage::FindSectionByVa(std::uint64_t va) const {
   return nullptr;
 }
 
+const PEUnwindEntry* PEImage::FindUnwindByFunctionRva(std::uint32_t begin_rva) const {
+  for (const auto& item : unwind_entries) {
+    if (item.begin_rva == begin_rva) {
+      return &item;
+    }
+  }
+  return nullptr;
+}
+
 std::vector<SectionInfo> PEImage::BuildSectionSummary() const {
   std::vector<SectionInfo> out;
   out.reserve(sections.size());
@@ -267,6 +276,8 @@ PEImage LoadPEImage(const std::string& file_path) {
   std::uint32_t export_size = 0;
   std::uint32_t import_rva = 0;
   std::uint32_t import_size = 0;
+  std::uint32_t exception_rva = 0;
+  std::uint32_t exception_size = 0;
   if (number_of_rva_and_sizes >= 1) {
     export_rva = ReadU32(image.bytes, data_dir_offset + 0);
     export_size = ReadU32(image.bytes, data_dir_offset + 4);
@@ -274,6 +285,10 @@ PEImage LoadPEImage(const std::string& file_path) {
   if (number_of_rva_and_sizes >= 2) {
     import_rva = ReadU32(image.bytes, data_dir_offset + 8);
     import_size = ReadU32(image.bytes, data_dir_offset + 12);
+  }
+  if (number_of_rva_and_sizes >= 4) {
+    exception_rva = ReadU32(image.bytes, data_dir_offset + 24);
+    exception_size = ReadU32(image.bytes, data_dir_offset + 28);
   }
 
   const auto section_table = optional_header + size_of_optional_header;
@@ -391,6 +406,38 @@ PEImage LoadPEImage(const std::string& file_path) {
             });
           }
         }
+      }
+    }
+  }
+
+  if (is_64 && exception_rva != 0 && exception_size >= 12) {
+    if (auto exception_offset = image.RvaToOffset(exception_rva); exception_offset.has_value()) {
+      const auto max_entries = std::min<std::size_t>(1024, exception_size / 12);
+      for (std::size_t idx = 0; idx < max_entries; ++idx) {
+        const auto base = exception_offset.value() + idx * 12;
+        if (base + 12 > image.bytes.size()) {
+          break;
+        }
+        const auto begin_rva = ReadU32(image.bytes, base + 0);
+        const auto end_rva = ReadU32(image.bytes, base + 4);
+        const auto unwind_rva = ReadU32(image.bytes, base + 8);
+        if (begin_rva == 0 && end_rva == 0 && unwind_rva == 0) {
+          break;
+        }
+        PEUnwindEntry unwind;
+        unwind.begin_rva = begin_rva;
+        unwind.end_rva = end_rva;
+        unwind.unwind_info_rva = unwind_rva;
+
+        if (auto unwind_offset = image.RvaToOffset(unwind_rva); unwind_offset.has_value() && unwind_offset.value() + 4 <= image.bytes.size()) {
+          const auto header = image.bytes[unwind_offset.value()];
+          unwind.version = static_cast<std::uint8_t>(header & 0x07);
+          unwind.flags = static_cast<std::uint8_t>((header >> 3) & 0x1F);
+          unwind.prolog_size = image.bytes[unwind_offset.value() + 1];
+          unwind.unwind_code_count = image.bytes[unwind_offset.value() + 2];
+          unwind.has_exception_handler = (unwind.flags & 0x01U) != 0 || (unwind.flags & 0x02U) != 0;
+        }
+        image.unwind_entries.push_back(unwind);
       }
     }
   }

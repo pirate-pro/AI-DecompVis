@@ -1,0 +1,12 @@
+{
+  "sample_id": "real_pe_cpp_like_x64",
+  "file_path": "samples/real_pe/cpp_like_x64.exe",
+  "arch": "x64",
+  "min_functions": 1,
+  "required_sections": [
+    ".text",
+    ".rdata"
+  ],
+  "require_this_pointer_hint": true,
+  "require_vtable_hint": true
+}

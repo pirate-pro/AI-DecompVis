@@ -1,0 +1,7 @@
+{
+  "sample_id": "real_pe_cpp_like_x64",
+  "arch": "x64",
+  "kind": "real_pe",
+  "file": "samples/real_pe/cpp_like_x64.exe",
+  "description": "Public PE32+ sample with this-pointer/object-like hints and vtable-like data"
+}

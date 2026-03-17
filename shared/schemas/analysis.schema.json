@@ -19,12 +19,14 @@
     "imports": {"type": "array"},
     "exports": {"type": "array"},
     "strings": {"type": "array"},
+    "xrefs": {"type": "array"},
     "functions": {
       "type": "array",
       "items": {
         "type": "object",
         "required": [
           "name",
+          "confidence",
           "entry_block_id",
           "blocks",
           "edges",
@@ -32,7 +34,10 @@
           "calling_convention_hint",
           "pseudo_code",
           "path_summaries",
-          "evidence_refs"
+          "evidence_refs",
+          "ir",
+          "summary",
+          "applied_constraints"
         ]
       }
     },
@@ -40,9 +45,10 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "level", "text", "evidence_refs"]
+        "required": ["id", "level", "confidence", "text", "evidence_refs"]
       }
     },
+    "applied_constraints": {"type": "array"},
     "progress": {"type": "array"}
   }
 }

@@ -17,57 +17,60 @@ export function StackPanel({ func, selectedBlock, selectedInstruction }: Props) 
 
   return (
     <div className="panel stack-panel">
-      <h3>Stack / Registers / Meta</h3>
+      <h3>栈 / 寄存器 / 节点元信息</h3>
       <div className="stack-section">
         <p>
-          Frame Size: <strong>{func.stack_frame.frame_size}</strong> bytes
+          栈帧大小: <strong>{func.stack_frame.frame_size}</strong> 字节
         </p>
         <p>
-          Min Depth: <strong>{func.stack_frame.min_depth}</strong> | Max Depth: <strong>{func.stack_frame.max_depth}</strong>
+          最小深度: <strong>{func.stack_frame.min_depth}</strong> | 最大深度: <strong>{func.stack_frame.max_depth}</strong>
         </p>
         <p>
-          Stack Balanced: <strong>{func.stack_frame.balanced ? "yes" : "no"}</strong>
+          栈是否平衡: <strong>{func.stack_frame.balanced ? "是" : "否"}</strong>
         </p>
         <p>
-          Current Delta: <strong>{selectedInstruction ? signed(selectedInstruction.stack_delta) : "-"}</strong>
+          当前指令栈增量: <strong>{selectedInstruction ? signed(selectedInstruction.stack_delta) : "-"}</strong>
         </p>
         <p>
-          Current Cumulative: <strong>{selectedInstruction ? selectedInstruction.cumulative_stack : "-"}</strong>
+          当前累计栈深: <strong>{selectedInstruction ? selectedInstruction.cumulative_stack : "-"}</strong>
         </p>
-        <p>Stack Note: {stackEvent?.note ?? "Select an instruction"}</p>
+        <p>栈说明: {stackEvent?.note ?? "请先选择一条指令"}</p>
       </div>
 
       <div className="meta-grid">
         <div>
-          <h4>Registers (teaching view)</h4>
+          <h4>寄存器（教学视图）</h4>
           <ul>
-            <li>RSP: tracked by stack model</li>
-            <li>RBP: frame base candidate</li>
-            <li>RAX: value unknown in static pass</li>
-            <li>RDI: observed in compare/call path</li>
+            <li>RSP: 由栈模型跟踪</li>
+            <li>RBP: 可能的栈帧基址</li>
+            <li>RAX: 静态分析下值可能未知</li>
+            <li>RDI: 在比较/调用路径中被观测</li>
           </ul>
         </div>
 
         <div>
-          <h4>Current Node Meta</h4>
-          <p>Block: {selectedBlock?.id ?? "-"}</p>
-          <p>Instructions: {selectedBlock?.instructions.length ?? 0}</p>
-          <p>Calling Conv: {func.calling_convention_hint || "unknown"}</p>
+          <h4>当前节点信息</h4>
+          <p>基本块: {selectedBlock?.id ?? "-"}</p>
+          <p>指令数: {selectedBlock?.instructions.length ?? 0}</p>
+          <p>调用约定: {func.calling_convention_hint || "unknown"}</p>
+          <p>函数置信度: {(func.confidence * 100).toFixed(0)}%</p>
           <p>
-            Params/Locals: {func.params_hint}/{func.locals_hint}
+            参数/局部变量: {func.params_hint}/{func.locals_hint}
           </p>
-          <p>Callers/Callees: {func.callers.length}/{func.callees.length}</p>
+          <p>调用者/被调者: {func.callers.length}/{func.callees.length}</p>
+          <p>Xref 入/出: {func.xref_in_count}/{func.xref_out_count}</p>
+          <p>导入/字符串 Xref: {func.import_xref_count}/{func.string_xref_count}</p>
           <p>
-            Outgoing:
+            出边:
             {selectedBlock?.outgoing_edges.length
               ? selectedBlock.outgoing_edges.map((edge) => ` ${edge.condition}->${edge.to_block}`).join(" |")
-              : " none"}
+              : " 无"}
           </p>
         </div>
       </div>
 
       <div>
-        <h4>Stack Slots</h4>
+        <h4>栈槽</h4>
         <ul>
           {func.stack_slots.slice(0, 8).map((slot) => (
             <li key={`${slot.role}-${slot.offset}`}>

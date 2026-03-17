@@ -53,3 +53,11 @@ jobs:
       - name: Web build
         working-directory: apps/web
         run: npm run build
+
+      - name: VS Code plugin deps
+        working-directory: plugins/vscode
+        run: npm ci
+
+      - name: VS Code plugin build
+        working-directory: plugins/vscode
+        run: npm run build

@@ -3,7 +3,10 @@ syntax = "proto3";
 package aidecomp.runtime.v1;
 
 service AIDecompRuntime {
+  // Versioned runtime contract for local daemon mode.
   rpc AnalyzeBinary(AnalyzeBinaryRequest) returns (AnalyzeBinaryResponse);
+  rpc CancelAnalysis(CancelAnalysisRequest) returns (CancelAnalysisResponse);
+  rpc GetProtocolInfo(GetProtocolInfoRequest) returns (GetProtocolInfoResponse);
   rpc GetProgramSummary(GetProgramSummaryRequest) returns (GetProgramSummaryResponse);
   rpc GetFunction(GetFunctionRequest) returns (GetFunctionResponse);
   rpc GetCFG(GetCFGRequest) returns (GetCFGResponse);
@@ -15,19 +18,40 @@ service AIDecompRuntime {
 }
 
 message AnalyzeBinaryRequest {
-  string project_id = 1;
-  string session_id = 2;
-  string sample_id = 3;
-  string binary_path = 4;
-  string arch = 5;
-  string function_name = 6;
-  string instructions_json = 7;
+  string api_version = 1;
+  string client_id = 2;
+  int64 request_unix_ms = 3;
+  string project_id = 4;
+  string session_id = 5;
+  string sample_id = 6;
+  string binary_path = 7;
+  string arch = 8;
+  string function_name = 9;
+  string instructions_json = 10;
+  string constraints_json = 11;
 }
 
 message AnalyzeBinaryResponse {
+  string api_version = 4;
   string session_id = 1;
   string project_id = 2;
   string program_json = 3;
+}
+
+message CancelAnalysisRequest {
+  string api_version = 1;
+  string session_id = 2;
+}
+
+message CancelAnalysisResponse {
+  bool accepted = 1;
+  string detail = 2;
+}
+
+message GetProtocolInfoRequest {}
+message GetProtocolInfoResponse {
+  string api_version = 1;
+  string daemon_name = 2;
 }
 
 message GetProgramSummaryRequest { string session_id = 1; }

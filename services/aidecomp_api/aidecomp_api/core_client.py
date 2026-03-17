@@ -21,18 +21,20 @@ class CoreAnalysisClient:
         sample_id: str,
         function_name: str,
         instructions: list[dict[str, Any]],
+        constraints: list[dict[str, Any]] | None = None,
     ) -> Program:
         payload = self._bridge.analyze_sequence(
             arch=arch,
             sample_id=sample_id,
             function_name=function_name,
             instructions=instructions,
+            constraints=constraints or [],
         )
         return Program.model_validate(payload)
 
-    def analyze_pe_file(self, *, sample_id: str, binary_path: str) -> Program:
+    def analyze_pe_file(self, *, sample_id: str, binary_path: str, constraints: list[dict[str, Any]] | None = None) -> Program:
         file_path = str(Path(binary_path).resolve())
-        payload = self._bridge.analyze_pe_file(sample_id=sample_id, file_path=file_path)
+        payload = self._bridge.analyze_pe_file(sample_id=sample_id, file_path=file_path, constraints=constraints or [])
         return Program.model_validate(payload)
 
     def demo_instructions(self) -> list[dict[str, Any]]:

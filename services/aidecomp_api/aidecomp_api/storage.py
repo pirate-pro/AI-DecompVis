@@ -6,7 +6,18 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .models import Annotation, Bookmark, Program, ProjectInfo, ProjectState, Rename, SampleRecord, UIState
+from .models import (
+    AnalysisConstraint,
+    Annotation,
+    Bookmark,
+    Program,
+    ProjectInfo,
+    ProjectState,
+    Rename,
+    SampleRecord,
+    SessionRecord,
+    UIState,
+)
 
 
 def _now() -> str:
@@ -88,6 +99,20 @@ class SQLiteRepository:
                     beginner_mode INTEGER NOT NULL,
                     updated_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS analysis_constraints (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_id TEXT NOT NULL,
+                    constraint_id TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    function_name TEXT NOT NULL,
+                    instruction_address INTEGER NOT NULL,
+                    variable TEXT NOT NULL,
+                    type_name TEXT NOT NULL,
+                    value_text TEXT NOT NULL,
+                    candidate_targets_json TEXT NOT NULL,
+                    enabled INTEGER NOT NULL,
+                    created_at TEXT NOT NULL
+                );
                 """
             )
 
@@ -122,6 +147,7 @@ class SQLiteRepository:
             conn.execute("DELETE FROM sessions WHERE project_id=?", (project_id,))
             conn.execute("DELETE FROM samples WHERE project_id=?", (project_id,))
             conn.execute("DELETE FROM ui_state WHERE project_id=?", (project_id,))
+            conn.execute("DELETE FROM analysis_constraints WHERE project_id=?", (project_id,))
             conn.execute("DELETE FROM projects WHERE project_id=?", (project_id,))
 
     def add_sample(self, sample: SampleRecord) -> None:
@@ -144,6 +170,22 @@ class SQLiteRepository:
                 project_id=row["project_id"],
                 source_type=row["source_type"],
                 location=row["location"],
+                created_at=row["created_at"],
+            )
+            for row in rows
+        ]
+
+    def list_sessions(self, project_id: str) -> list[SessionRecord]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT session_id, project_id, sample_id, created_at FROM sessions WHERE project_id=? ORDER BY created_at DESC",
+                (project_id,),
+            ).fetchall()
+        return [
+            SessionRecord(
+                session_id=row["session_id"],
+                project_id=row["project_id"],
+                sample_id=row["sample_id"],
                 created_at=row["created_at"],
             )
             for row in rows
@@ -191,6 +233,63 @@ class SQLiteRepository:
                 "INSERT INTO renames(project_id, target_type, target_id, new_name, created_at) VALUES (?, ?, ?, ?, ?)",
                 (project_id, rename.target_type, rename.target_id, rename.new_name, _now()),
             )
+
+    def add_constraint(self, project_id: str, constraint: AnalysisConstraint) -> None:
+        self.ensure_project(project_id)
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO analysis_constraints(
+                    project_id, constraint_id, kind, function_name, instruction_address,
+                    variable, type_name, value_text, candidate_targets_json, enabled, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    project_id,
+                    constraint.id or f"constraint-{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+                    constraint.kind,
+                    constraint.function_name,
+                    constraint.instruction_address,
+                    constraint.variable,
+                    constraint.type_name,
+                    constraint.value_text,
+                    json.dumps(constraint.candidate_targets, ensure_ascii=False),
+                    1 if constraint.enabled else 0,
+                    _now(),
+                ),
+            )
+
+    def list_constraints(self, project_id: str) -> list[AnalysisConstraint]:
+        self.ensure_project(project_id)
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT constraint_id, kind, function_name, instruction_address, variable, type_name,
+                       value_text, candidate_targets_json, enabled
+                FROM analysis_constraints
+                WHERE project_id=?
+                ORDER BY id
+                """,
+                (project_id,),
+            ).fetchall()
+
+        out: list[AnalysisConstraint] = []
+        for row in rows:
+            out.append(
+                AnalysisConstraint(
+                    id=row["constraint_id"],
+                    kind=row["kind"],
+                    function_name=row["function_name"],
+                    instruction_address=row["instruction_address"],
+                    variable=row["variable"],
+                    type_name=row["type_name"],
+                    value_text=row["value_text"],
+                    candidate_targets=json.loads(row["candidate_targets_json"] or "[]"),
+                    enabled=bool(row["enabled"]),
+                )
+            )
+        return out
 
     def get_project_state(self, project_id: str) -> ProjectState:
         self.ensure_project(project_id)

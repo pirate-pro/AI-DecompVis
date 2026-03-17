@@ -1,0 +1,13 @@
+{
+  "sample_id": "real_pe_switch_x64",
+  "file_path": "samples/real_pe/switch_x64.exe",
+  "arch": "x64",
+  "min_functions": 1,
+  "required_sections": [
+    ".text",
+    ".rdata"
+  ],
+  "min_strings": 1,
+  "require_switch_candidate": true,
+  "require_indirect_control": true
+}

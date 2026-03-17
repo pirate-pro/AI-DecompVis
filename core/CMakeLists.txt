@@ -8,6 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(aidecomp_core STATIC
   aidecomp_core/src/analyzer.cpp
+  aidecomp_core/src/native_byte_image_decoder.cpp
+  aidecomp_core/src/objdump_image_decoder.cpp
   aidecomp_core/src/pe_loader.cpp
   aidecomp_core/src/x86_byte_decoder.cpp
   aidecomp_core/src/x86_decoder.cpp

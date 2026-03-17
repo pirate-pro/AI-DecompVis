@@ -21,7 +21,7 @@ export function CfgGraph({ func, selectedBlockId, onSelectBlock }: Props) {
 
   return (
     <div className="cfg-shell">
-      <svg viewBox={`0 0 360 ${height}`} className="cfg-canvas" role="img" aria-label="cfg graph">
+      <svg viewBox={`0 0 360 ${height}`} className="cfg-canvas" role="img" aria-label="控制流图">
         <defs>
           <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#f95d2a" />
@@ -59,7 +59,7 @@ export function CfgGraph({ func, selectedBlockId, onSelectBlock }: Props) {
                 {block.id}
               </text>
               <text x={p.x + 12} y={p.y + 40} className="node-subtitle">
-                {block.instructions.length} instr
+                {block.instructions.length} 条指令
               </text>
             </g>
           );

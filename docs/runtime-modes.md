@@ -1,45 +1,49 @@
 # Runtime Modes
 
-AI-DecompVis supports two runtime modes:
+AI-DecompVis supports `embedded` and `daemon` runtime modes.
 
-## 1) embedded mode
+## Embedded mode
 
 Path:
 `Web/Desktop/Plugin -> FastAPI -> pybind11 -> C++ core`
 
-Use when:
-- local single-user workflow
-- fast setup
-- easiest debugging
-
 Env:
-- `AIDECOMP_RUNTIME_MODE=embedded`
+- `AIDECOMP_RUNTIME_MODE=embedded` (default)
 
-## 2) daemon mode
+Characteristics:
+- lowest integration overhead
+- easiest local debugging
+- no extra gRPC hop
+
+## Daemon mode
 
 Path:
-`Web/Desktop/Plugin -> FastAPI -> gRPC -> aidecompd -> C++ core`
-
-Use when:
-- isolate analysis runtime
-- prepare future multi-client local architecture
-- align with plugin thin-client boundary
+`Web/Desktop/Plugin -> FastAPI -> gRPC -> aidecompd -> pybind11 -> C++ core`
 
 Env:
 - `AIDECOMP_RUNTIME_MODE=daemon`
 - `AIDECOMPD_TARGET=127.0.0.1:50051`
 
-Run daemon:
+Characteristics:
+- explicit runtime boundary for local agent-style deployment
+- better alignment with future multi-client architecture
+- better isolation of analysis process lifecycle
 
-```bash
-PYTHONPATH=core/aidecomp_py/python:services/aidecomp_api:services \
-  .venv/bin/python -m aidecompd.main
-```
+## Contract and compatibility
 
-Then run API in daemon mode:
+- proto: `shared/proto/aidecomp_runtime.proto`
+- current API version tag: `aidecomp.runtime.v1`
+- request/response include `api_version` for compatibility checks
+- daemon provider validates protocol before Analyze RPC
 
-```bash
-AIDECOMP_RUNTIME_MODE=daemon AIDECOMPD_TARGET=127.0.0.1:50051 \
-PYTHONPATH=core/aidecomp_py/python:services/aidecomp_api:services \
-  .venv/bin/uvicorn aidecomp_api.main:app --app-dir services/aidecomp_api --host 127.0.0.1 --port 8000
-```
+## Cancellation path
+
+- API endpoint: `POST /analysis/tasks/{task_id}/cancel`
+- daemon provider sends `CancelAnalysis` RPC when task is cancelled while waiting
+- core analysis remains synchronous; cancellation is cooperative/best-effort
+
+## Constraint propagation
+
+- project-level constraints are persisted in SQLite
+- when analysis request has no inline constraints, FastAPI injects stored constraints
+- both runtime modes forward constraints to C++ core

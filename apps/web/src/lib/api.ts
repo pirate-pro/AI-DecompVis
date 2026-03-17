@@ -1,4 +1,6 @@
 import type {
+  AnalysisConstraint,
+  BinaryDiscoveryResponse,
   Explanation,
   Program,
   ProjectInfo,
@@ -35,11 +37,35 @@ export async function fetchSamples(): Promise<SampleInfo[]> {
   return jsonFetch<SampleInfo[]>("/samples");
 }
 
+export async function discoverBinaries(payload: {
+  q?: string;
+  limit?: number;
+  maxDepth?: number;
+  roots?: string[];
+}): Promise<BinaryDiscoveryResponse> {
+  const params = new URLSearchParams();
+  if (payload.q?.trim()) {
+    params.set("q", payload.q.trim());
+  }
+  if (payload.limit) {
+    params.set("limit", String(payload.limit));
+  }
+  if (payload.maxDepth) {
+    params.set("max_depth", String(payload.maxDepth));
+  }
+  if (payload.roots && payload.roots.length > 0) {
+    params.set("roots", payload.roots.join(","));
+  }
+  const query = params.toString();
+  return jsonFetch<BinaryDiscoveryResponse>(`/discovery/binaries${query ? `?${query}` : ""}`);
+}
+
 export async function runAnalysis(payload: {
   project_id: string;
   session_id: string;
   sample_id?: string;
   binary_path?: string;
+  constraints?: AnalysisConstraint[];
 }): Promise<{ session_id: string; project_id: string; program: Program }> {
   return jsonFetch<{ session_id: string; project_id: string; program: Program }>("/analysis/run", {
     method: "POST",
@@ -57,6 +83,7 @@ export async function createAnalysisTask(payload: {
     session_id: string;
     sample_id?: string;
     binary_path?: string;
+    constraints?: AnalysisConstraint[];
   };
 }): Promise<{ task_id: string }> {
   return jsonFetch<{ task_id: string }>("/analysis/tasks", {
@@ -67,6 +94,10 @@ export async function createAnalysisTask(payload: {
 
 export async function getTaskStatus(taskId: string): Promise<TaskStatus> {
   return jsonFetch<TaskStatus>(`/analysis/tasks/${taskId}`);
+}
+
+export async function cancelTask(taskId: string): Promise<TaskStatus> {
+  return jsonFetch<TaskStatus>(`/analysis/tasks/${taskId}/cancel`, { method: "POST" });
 }
 
 export function createTaskEventSource(taskId: string): EventSource {
@@ -138,6 +169,22 @@ export async function deleteProject(projectId: string): Promise<{ status: string
 
 export async function fetchProjectSamples(projectId: string): Promise<SampleRecord[]> {
   return jsonFetch<SampleRecord[]>(`/projects/${projectId}/samples`);
+}
+
+export async function fetchConstraints(
+  projectId: string
+): Promise<{ project_id: string; constraints: AnalysisConstraint[] }> {
+  return jsonFetch<{ project_id: string; constraints: AnalysisConstraint[] }>(`/projects/${projectId}/constraints`);
+}
+
+export async function createConstraint(
+  projectId: string,
+  constraint: AnalysisConstraint
+): Promise<{ project_id: string; constraints: AnalysisConstraint[] }> {
+  return jsonFetch<{ project_id: string; constraints: AnalysisConstraint[] }>(`/projects/${projectId}/constraints`, {
+    method: "POST",
+    body: JSON.stringify({ constraint })
+  });
 }
 
 export async function fetchUIState(projectId: string): Promise<UIState> {

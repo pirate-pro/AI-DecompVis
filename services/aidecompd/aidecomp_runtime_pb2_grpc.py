@@ -3,7 +3,10 @@
 import grpc
 import warnings
 
-from . import aidecomp_runtime_pb2 as aidecomp__runtime__pb2
+try:
+    from . import aidecomp_runtime_pb2 as aidecomp__runtime__pb2
+except ImportError:
+    import aidecomp_runtime_pb2 as aidecomp__runtime__pb2
 
 GRPC_GENERATED_VERSION = '1.78.0'
 GRPC_VERSION = grpc.__version__
@@ -38,6 +41,16 @@ class AIDecompRuntimeStub(object):
                 '/aidecomp.runtime.v1.AIDecompRuntime/AnalyzeBinary',
                 request_serializer=aidecomp__runtime__pb2.AnalyzeBinaryRequest.SerializeToString,
                 response_deserializer=aidecomp__runtime__pb2.AnalyzeBinaryResponse.FromString,
+                _registered_method=True)
+        self.CancelAnalysis = channel.unary_unary(
+                '/aidecomp.runtime.v1.AIDecompRuntime/CancelAnalysis',
+                request_serializer=aidecomp__runtime__pb2.CancelAnalysisRequest.SerializeToString,
+                response_deserializer=aidecomp__runtime__pb2.CancelAnalysisResponse.FromString,
+                _registered_method=True)
+        self.GetProtocolInfo = channel.unary_unary(
+                '/aidecomp.runtime.v1.AIDecompRuntime/GetProtocolInfo',
+                request_serializer=aidecomp__runtime__pb2.GetProtocolInfoRequest.SerializeToString,
+                response_deserializer=aidecomp__runtime__pb2.GetProtocolInfoResponse.FromString,
                 _registered_method=True)
         self.GetProgramSummary = channel.unary_unary(
                 '/aidecomp.runtime.v1.AIDecompRuntime/GetProgramSummary',
@@ -85,6 +98,19 @@ class AIDecompRuntimeServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def AnalyzeBinary(self, request, context):
+        """Versioned runtime contract for local daemon mode.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CancelAnalysis(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetProtocolInfo(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -145,6 +171,16 @@ def add_AIDecompRuntimeServicer_to_server(servicer, server):
                     servicer.AnalyzeBinary,
                     request_deserializer=aidecomp__runtime__pb2.AnalyzeBinaryRequest.FromString,
                     response_serializer=aidecomp__runtime__pb2.AnalyzeBinaryResponse.SerializeToString,
+            ),
+            'CancelAnalysis': grpc.unary_unary_rpc_method_handler(
+                    servicer.CancelAnalysis,
+                    request_deserializer=aidecomp__runtime__pb2.CancelAnalysisRequest.FromString,
+                    response_serializer=aidecomp__runtime__pb2.CancelAnalysisResponse.SerializeToString,
+            ),
+            'GetProtocolInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetProtocolInfo,
+                    request_deserializer=aidecomp__runtime__pb2.GetProtocolInfoRequest.FromString,
+                    response_serializer=aidecomp__runtime__pb2.GetProtocolInfoResponse.SerializeToString,
             ),
             'GetProgramSummary': grpc.unary_unary_rpc_method_handler(
                     servicer.GetProgramSummary,
@@ -214,6 +250,60 @@ class AIDecompRuntime(object):
             '/aidecomp.runtime.v1.AIDecompRuntime/AnalyzeBinary',
             aidecomp__runtime__pb2.AnalyzeBinaryRequest.SerializeToString,
             aidecomp__runtime__pb2.AnalyzeBinaryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CancelAnalysis(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/aidecomp.runtime.v1.AIDecompRuntime/CancelAnalysis',
+            aidecomp__runtime__pb2.CancelAnalysisRequest.SerializeToString,
+            aidecomp__runtime__pb2.CancelAnalysisResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetProtocolInfo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/aidecomp.runtime.v1.AIDecompRuntime/GetProtocolInfo',
+            aidecomp__runtime__pb2.GetProtocolInfoRequest.SerializeToString,
+            aidecomp__runtime__pb2.GetProtocolInfoResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -89,3 +89,13 @@ Do not add offensive workflows or evasion-oriented features.
 - Keep desktop and plugin implementations thin; reuse shared contracts.
 - Update docs whenever runtime modes or plugin contracts change.
 - Add tests for any new analysis feature before considering the task complete.
+
+## P3 focus rules
+
+- Prefer decoder/backend realism over UI polish.
+- Prefer xref/function-discovery quality over adding new surfaces.
+- Every explanation improvement must be evidence-backed.
+- Unsupported or uncertain analysis must be marked explicitly.
+- Keep VS Code as the first fully usable thin plugin.
+- Keep Electron and plugin hosts free of duplicated analysis logic.
+- Add regression coverage for any new analysis capability before closing the task.
